@@ -1,0 +1,42 @@
+name: Generate Contribution Snake
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'   # every 12 hours
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write   # required to push generated snake SVGs to the output branch
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate the snake SVG (dark + light)
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: aiMahdiX
+          # Custom dark palette: empty cells use #2d3343 (visible against
+          # GitHub's #0d1117 background), not a near-black empty colour.
+          palette: |
+            {"github-dark": ["#2d3343", "#0e4429", "#006d32", "#26a641", "#39d353"]}
+          outputs: |
+            dist/github-contribution-grid-snake.svg
+            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push generated snake SVGs to the output branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist
+          publish_branch: output
+          commit_message: "chore: update contribution snake [skip ci]"
